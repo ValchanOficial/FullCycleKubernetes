@@ -1,0 +1,81 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: projectserver
+  labels:
+    app: projectserver
+spec:
+  selector:
+    matchLabels:
+      app: projectserver
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: projectserver
+    spec:
+      serviceAccountName: server # Account com permissão de leitura
+      containers:
+        - name: projectserver
+          image: projectserver:latest
+ 
+          resources: # a quantidade de réplicas é definida com base nos recursos disponíveis
+            requests: # quantidade mínima de recursos que o container precisa para rodar
+              memory: "20Mi"
+              cpu: "100m"
+            limits: # quantidade máxima de recursos que o container pode usar
+              memory: "25Mi"
+              cpu: "500m" # cuidado para que a somatória de todos os limites não ultrapasse a capacidade total
+
+          # https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/
+          ports:
+          - name: liveness-port
+            containerPort: 8000
+            hostPort: 8000
+          startupProbe: # verifica se o container está pronto para receber tráfego
+            httpGet:
+              path: /healthz
+              port: liveness-port
+              # failureThreshold * periodSeconds = 30 * 10 = 300 segundos = 5 minutos para o container iniciar
+            periodSeconds: 10 # tempo de verificação
+            failureThreshold: 30 # limite de falhas
+            # o readnessProbe precisa executar antes do livenessProbe!
+          readinessProbe: # verifica se o container está pronto para receber tráfego
+            httpGet:
+              path: /healthz
+              port: liveness-port
+            periodSeconds: 3 # tempo de verificação
+            failureThreshold: 1 # limite de falhas
+            initialDelaySeconds: 5 # tempo para iniciar a verificação
+          livenessProbe: # verifica se o container está saudável
+            httpGet:
+              path: /healthz
+              port: liveness-port
+            initialDelaySeconds: 5 # tempo para iniciar a verificação
+            periodSeconds: 5 # tempo de verificação
+            failureThreshold: 3 # limite de falhas
+            timeoutSeconds: 1 # tempo de espera para a verificação, caso haja integração com banco de dados por exemplo, aumentar o tempo
+            successThreshold: 3 # quantidade de vezes que a verificação deve ser bem sucedida para considerar o container como saudável
+          envFrom:
+            - configMapRef: 
+                name: projectserver-env
+            - secretRef:
+                name: projectserver-secret
+
+          volumeMounts:
+            - mountPath: "/exemplo"
+              name: config
+              readOnly: true
+            - mountPath: "/exemplo/pvc"
+              name: projectserver-pvc
+
+      volumes:
+        - name: projectserver-pvc
+          persistentVolumeClaim:
+            claimName: projectserver-pvc
+        - name: config
+          configMap:
+            name: configmap-example
+            items:
+              - key: members
+                path: "example.txt"

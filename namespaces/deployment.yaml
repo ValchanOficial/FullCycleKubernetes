@@ -1,0 +1,43 @@
+kind apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: server
+spec:
+  selector:
+    matchLabels:
+      app: server
+  template:
+    metadata:
+      labels:
+        app: server
+    spec:
+      containers:
+      - name: server
+        image: valchan/go:latest
+        resources:
+          limits:
+            memory: "128Mi"
+            cpu: "500m"
+        ports:
+        - containerPort: 3000
+
+# default namespace
+# kubectl apply -f deployment.yaml
+
+# dev namespace
+# kubectl create namespace dev
+# kubectl apply -f deployment.yaml -n=dev
+
+# prod namespace
+# kubectl create namespace prod
+# kubectl apply -f deployment.yaml -n=prod
+
+# busca todos os pods com a label app=server
+# kubectl get pods -l app=server
+
+# kubectl config view -> mostra detalhes do contexto atual
+# kubectl config current-context -> mostra o contexto atual
+# kubectl config set-context dev --namespace=dev --cluster=nome-do-cluster --user=nome-do-usuario
+# kubectl config use-context dev -> muda o contexto atual para dev
+# kubectl config set-context prod --namespace=prod --cluster=nome-do-cluster --user=nome-do-usuario
+# kubectl config use-context prod -> muda o contexto atual para prod

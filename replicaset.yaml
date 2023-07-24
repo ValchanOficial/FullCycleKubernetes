@@ -1,0 +1,19 @@
+apiVersion: apps/v1
+kind: ReplicaSet
+metadata:
+  name: projectserver
+  labels:
+    app: projectserver
+spec:
+  selector:
+    matchLabels:
+      app: projectserver
+  replicas: 2
+  template:
+    metadata:
+      labels:
+        app: projectserver
+    spec:
+      containers:
+        - name: projectserver
+          image: projectserver:latest

@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: "projectserver"
+  labels:
+    app: "projectserver"
+spec:
+  containers:
+    - name: "projectserver"
+      image: "projectserver:latest"

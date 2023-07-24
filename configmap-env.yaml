@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: projectserver-env
+data:
+  NAME: Valchan
+  AGE: "29"
